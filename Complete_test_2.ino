@@ -425,3 +425,15 @@ void ReceiveBluetoothMSG(){ // Function for monitoring the bluetooth inputstream
     }
   }
 }
+
+String extractCenterX(String data) {
+  int startIndex = data.indexOf('$') + 1; 
+  int endIndex = data.indexOf('!', startIndex); 
+
+  if (startIndex > 0 && endIndex > startIndex) {
+    String centerX = data.substring(startIndex, endIndex);
+    return centerX;
+  } else {
+    return "Error";
+  }
+}
