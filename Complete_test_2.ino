@@ -12,6 +12,8 @@ uint8_t record[6]; // save record
 uint8_t buf[64];
 String content = "";
 char datarcv;
+String centerX = "";
+String centerY = "";
 
 
 int level = 0;
@@ -20,6 +22,7 @@ bool moveDown = false;
 bool moveLeft = false;
 bool moveRight = false;
 bool horizental = false;
+bool searching = true; // Test
 
 // initial angle
 int up_down_angle = 44;
@@ -46,6 +49,13 @@ int rotate_Speed = 20;
 #define level2CMD4       (8) // Left
 #define level2CMD5       (9) // Right
 
+
+struct Coordinate {
+  String type;
+  String value;
+};
+
+
 void setup()
 {
   /** initialize */
@@ -68,11 +78,17 @@ void setup()
   Rotate_Servo.write(rotate_angle);
   Left_Right_Servo.write(left_right_angle);
   Up_Down_Servo.write(up_down_angle);
+
+
 }
 
 void loop()
 {
+  while (searching) {
   ReceiveBluetoothMSG();
+
+  }
+  
   int ret;
   ret = myVR.recognize(buf, 50);
   if(ret>0){
@@ -419,21 +435,50 @@ void ReceiveBluetoothMSG(){ // Function for monitoring the bluetooth inputstream
       delay(10);  
     }
     if (datarcv == '\n') {
-      Serial.print(content);
-      Serial.println("Received");
+      processContent(content);
+      //Serial.print(content);
+      //Serial.println("Received");
       content = "";
     }
   }
 }
 
-String extractCenterX(String data) {
-  int startIndex = data.indexOf('$') + 1; 
-  int endIndex = data.indexOf('!', startIndex); 
+void processContent(String data) { 
+// This function is used to process a string containing multiple coordinate packets.
+// It splits the string into separate packets and processes each packet. 
+// The loop exits when no more newline characters are found,
+// indicating that all packets in the string have been processed
+  int lastIndex = 0;
+  int nextIndex;
 
-  if (startIndex > 0 && endIndex > startIndex) {
-    String centerX = data.substring(startIndex, endIndex);
-    return centerX;
-  } else {
-    return "Error";
+  while ((nextIndex = data.indexOf('\n', lastIndex)) != -1) {
+    // Extract a single packet from the string using the indices
+    String packet = data.substring(lastIndex, nextIndex);
+    lastIndex = nextIndex + 1;
+    
+    // Process the extracted packet
+    //Serial.println(packet); 
+    Coordinate coord = extractCoordinate(packet);
+    if (coord.type == "X") {
+      Serial.println("X coordinate: " + coord.value);
+    } else if (coord.type == "Y") {
+      Serial.println("Y coordinate: " + coord.value);
+    }
   }
+}
+
+
+Coordinate extractCoordinate(String data) { // Function for extract the right X/Y coordinate value from the data package received from Bluetooth
+  Coordinate coord;
+  int dollarIndex = data.indexOf('$') + 1;
+  int exclamationIndex = data.indexOf('!', dollarIndex);
+
+  if (dollarIndex > 1 && exclamationIndex > dollarIndex) {
+    coord.type = data.substring(0, 1); // Extract the type: X or Y
+    coord.value = data.substring(dollarIndex, exclamationIndex); // Extract the coordinate value
+  } else {
+    coord.type = "Error";
+    coord.value = "Invalid format";
+  }
+  return coord;
 }
