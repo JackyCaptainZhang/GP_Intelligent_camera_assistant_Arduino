@@ -84,10 +84,10 @@ void setup()
 
 void loop()
 {
-  while (searching) {
-  ReceiveBluetoothMSG();
+  // while (searching) {
+  // ReceiveBluetoothMSG();
 
-  }
+  // }
   
   int ret;
   ret = myVR.recognize(buf, 50);
@@ -105,8 +105,9 @@ void loop()
           record[4] = level1CMD5;  // Alblum
           record[5] = level1CMD6;  // Tap center
           if(myVR.load(record, 6) >= 0){
-            printRecord(record, 6);
-            Serial.println(F("loaded."));
+            Serial.println("Alice");
+            //printRecord(record, 6);
+            //Serial.println(F("loaded."));
           }
         }
         break;
@@ -130,8 +131,8 @@ void loop()
           record[3] = level2CMD4;  // Left
           record[4] = level2CMD5;  // Right
           if(myVR.load(record, 5) >= 0){
-            printRecord(record, 5);
-            Serial.println(F("loaded."));
+            //printRecord(record, 5);
+            //Serial.println(F("loaded."));
           }
         }
         break;
@@ -212,7 +213,7 @@ void loop()
         break;
     }
     /** voice recognized */
-    printVR(buf);
+    //printVR(buf);
   }
   if(moveUp){
       continueMovingUp();
@@ -259,46 +260,46 @@ void printSignature(uint8_t *buf, int len)
              buf[3]  -->  Signature length
              buf[4]~buf[n] --> Signature
 */
-void printVR(uint8_t *buf)
-{
-  Serial.println("VR Index\tGroup\tRecordNum\tSignature");
+// void printVR(uint8_t *buf)
+// {
+//   Serial.println("VR Index\tGroup\tRecordNum\tSignature");
 
-  Serial.print(buf[2], DEC);
-  Serial.print("\t\t");
+//   Serial.print(buf[2], DEC);
+//   Serial.print("\t\t");
 
-  if(buf[0] == 0xFF){
-    Serial.print("NONE");
-  }
-  else if(buf[0]&0x80){
-    Serial.print("UG ");
-    Serial.print(buf[0]&(~0x80), DEC);
-  }
-  else{
-    Serial.print("SG ");
-    Serial.print(buf[0], DEC);
-  }
-  Serial.print("\t");
+//   if(buf[0] == 0xFF){
+//     Serial.print("NONE");
+//   }
+//   else if(buf[0]&0x80){
+//     Serial.print("UG ");
+//     Serial.print(buf[0]&(~0x80), DEC);
+//   }
+//   else{
+//     Serial.print("SG ");
+//     Serial.print(buf[0], DEC);
+//   }
+//   Serial.print("\t");
 
-  Serial.print(buf[1], DEC);
-  Serial.print("\t\t");
-  if(buf[3]>0){
-    printSignature(buf+4, buf[3]);
-  }
-  else{
-    Serial.print("NONE");
-  }
+//   Serial.print(buf[1], DEC);
+//   Serial.print("\t\t");
+//   if(buf[3]>0){
+//     printSignature(buf+4, buf[3]);
+//   }
+//   else{
+//     Serial.print("NONE");
+//   }
 
-  Serial.println();
-}
+//   Serial.println();
+// }
 
-void printRecord(uint8_t *buf, uint8_t len)
-{
-  Serial.print(F("Record: "));
-  for(int i=0; i<len; i++){
-    Serial.print(buf[i], DEC);
-    Serial.print(", ");
-  }
-}
+// void printRecord(uint8_t *buf, uint8_t len)
+// {
+//   Serial.print(F("Record: "));
+//   for(int i=0; i<len; i++){
+//     Serial.print(buf[i], DEC);
+//     Serial.print(", ");
+//   }
+// }
 
 void startMovingUp(){
   if(up_down_angle < 74){
