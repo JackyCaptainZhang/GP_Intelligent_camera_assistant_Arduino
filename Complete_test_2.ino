@@ -22,7 +22,7 @@ bool moveDown = false;
 bool moveLeft = false;
 bool moveRight = false;
 bool horizental = false;
-bool searching = true; // Test
+bool searching = false; // Test
 
 // initial angle
 int up_down_angle = 44;
@@ -62,15 +62,12 @@ void setup()
   myVR.begin(9600);
   Serial.begin(9600);
   if(myVR.clear() == 0){
-    Serial.println("Recognizer cleared.");
-
+    Serial.println("System Ready!");
   }else{
     Serial.println("Not find VoiceRecognitionModule.");
     while(1);
   }
   myVR.load(uint8_t (0));  // load the Alice
-  Serial.print("Recognizer cleared and ");
-  Serial.println("loaded.");
   level = 0;
   Rotate_Servo.attach(6);
   Left_Right_Servo.attach(7);
@@ -83,12 +80,7 @@ void setup()
 }
 
 void loop()
-{
-  // while (searching) {
-  // ReceiveBluetoothMSG();
-
-  // }
-  
+{ 
   int ret;
   ret = myVR.recognize(buf, 50);
   if(ret>0){
@@ -106,8 +98,6 @@ void loop()
           record[5] = level1CMD6;  // Tap center
           if(myVR.load(record, 6) >= 0){
             Serial.println("Alice");
-            //printRecord(record, 6);
-            //Serial.println(F("loaded."));
           }
         }
         break;
@@ -139,7 +129,11 @@ void loop()
       
       case level1CMD3: // Find
         Serial.println("Find!");
+        //searching = true;
         // todo
+        while (searching) {
+       ReceiveBluetoothMSG();
+   }
         level = 0;
         myVR.clear();
         myVR.load(uint8_t (0));  // load the Alice
@@ -212,8 +206,6 @@ void loop()
       default:
         break;
     }
-    /** voice recognized */
-    //printVR(buf);
   }
   if(moveUp){
       continueMovingUp();
@@ -260,46 +252,6 @@ void printSignature(uint8_t *buf, int len)
              buf[3]  -->  Signature length
              buf[4]~buf[n] --> Signature
 */
-// void printVR(uint8_t *buf)
-// {
-//   Serial.println("VR Index\tGroup\tRecordNum\tSignature");
-
-//   Serial.print(buf[2], DEC);
-//   Serial.print("\t\t");
-
-//   if(buf[0] == 0xFF){
-//     Serial.print("NONE");
-//   }
-//   else if(buf[0]&0x80){
-//     Serial.print("UG ");
-//     Serial.print(buf[0]&(~0x80), DEC);
-//   }
-//   else{
-//     Serial.print("SG ");
-//     Serial.print(buf[0], DEC);
-//   }
-//   Serial.print("\t");
-
-//   Serial.print(buf[1], DEC);
-//   Serial.print("\t\t");
-//   if(buf[3]>0){
-//     printSignature(buf+4, buf[3]);
-//   }
-//   else{
-//     Serial.print("NONE");
-//   }
-
-//   Serial.println();
-// }
-
-// void printRecord(uint8_t *buf, uint8_t len)
-// {
-//   Serial.print(F("Record: "));
-//   for(int i=0; i<len; i++){
-//     Serial.print(buf[i], DEC);
-//     Serial.print(", ");
-//   }
-// }
 
 void startMovingUp(){
   if(up_down_angle < 74){
@@ -356,7 +308,7 @@ void continueMovingUp(){
   if(up_down_angle < 80){
   up_down_angle ++;
   Up_Down_Servo.write(up_down_angle);
-  Serial.println(up_down_angle);
+  //Serial.println(up_down_angle);
   delay(up_down_Speed);
   }else{
     level = 0;
@@ -370,7 +322,7 @@ void continueMovingDown(){
   if(up_down_angle > 4){
   up_down_angle --;
   Up_Down_Servo.write(up_down_angle);
-  Serial.println(up_down_angle);
+  //Serial.println(up_down_angle);
   delay(up_down_Speed);
   }else{
     level = 0;
@@ -384,7 +336,7 @@ void continueMovingLeft(){
   if(left_right_angle < 125){
   left_right_angle ++;
   Left_Right_Servo.write(left_right_angle);
-  Serial.println(left_right_angle);
+  //Serial.println(left_right_angle);
   delay(left_right_Speed);
   }else{
     level = 0;
@@ -398,7 +350,7 @@ void continueMovingRight(){
   if(left_right_angle > 0){
   left_right_angle --;
   Left_Right_Servo.write(left_right_angle);
-  Serial.println(left_right_angle);
+  //Serial.println(left_right_angle);
   delay(left_right_Speed);
   }else{
     level = 0;
@@ -437,8 +389,6 @@ void ReceiveBluetoothMSG(){ // Function for monitoring the bluetooth inputstream
     }
     if (datarcv == '\n') {
       processContent(content);
-      //Serial.print(content);
-      //Serial.println("Received");
       content = "";
     }
   }
@@ -456,9 +406,7 @@ void processContent(String data) {
     // Extract a single packet from the string using the indices
     String packet = data.substring(lastIndex, nextIndex);
     lastIndex = nextIndex + 1;
-    
     // Process the extracted packet
-    //Serial.println(packet); 
     Coordinate coord = extractCoordinate(packet);
     if (coord.type == "X") {
       Serial.println("X coordinate: " + coord.value);
