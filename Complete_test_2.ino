@@ -2,12 +2,13 @@
 #include "VoiceRecognitionV3.h"
 #include <Servo.h>
 
-
+// object defination
 VR myVR(2,3);    // TX to pin 2; RX to pin 3; Bluetooth use the hardware TX and RX pins
 Servo Rotate_Servo; // Pin 6
 Servo Left_Right_Servo; // Pin 7
 Servo Up_Down_Servo; // Pin 8
 
+// data storage
 uint8_t record[6]; // save record
 uint8_t buf[64];
 String content = "";
@@ -15,7 +16,7 @@ char datarcv;
 String centerX = "";
 String centerY = "";
 
-
+// flags
 int level = 0;
 bool moveUp = false;
 bool moveDown = false;
@@ -34,15 +35,17 @@ int up_down_Speed = 30;
 int left_right_Speed = 30;
 int rotate_Speed = 20;
 
+// Macro definations
+//Level 0
 #define level0Alice      (0) 
-
+// Level 1
 #define level1CMD1       (2) // Take photo
 #define level1CMD2       (3) // Move
 #define level1CMD3       (4) // Find
 #define level1CMD4       (5) // Rotate
 #define level1CMD5       (10) // Alblum
 #define level1CMD6       (11) // Tap center
-
+// Level 2
 #define level2CMD1       (1) // Stop
 #define level2CMD2       (6) // Up
 #define level2CMD3       (7) // Down
@@ -75,8 +78,6 @@ void setup()
   Rotate_Servo.write(rotate_angle);
   Left_Right_Servo.write(left_right_angle);
   Up_Down_Servo.write(up_down_angle);
-
-
 }
 
 void loop()
@@ -417,13 +418,13 @@ void processContent(String data) {
 }
 
 
-Coordinate extractCoordinate(String data) { // Function for extract the right X/Y coordinate value from the data package received from Bluetooth
+Coordinate extractCoordinate(String data) { // Function for extract the right X/Y coordinate value from the "X/Y $XXX !" data package received from Bluetooth
   Coordinate coord;
   int dollarIndex = data.indexOf('$') + 1;
   int exclamationIndex = data.indexOf('!', dollarIndex);
 
   if (dollarIndex > 1 && exclamationIndex > dollarIndex) {
-    coord.type = data.substring(0, 1); // Extract the type: X or Y
+    coord.type = data.substring(0, 1); // Extract the coordinate type: X or Y
     coord.value = data.substring(dollarIndex, exclamationIndex); // Extract the coordinate value
   } else {
     coord.type = "Error";
