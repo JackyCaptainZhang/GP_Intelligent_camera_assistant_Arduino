@@ -129,7 +129,7 @@ void loop()
       
       case level1CMD3: // Find
         Serial.println("Find!");
-        //searching = true;
+        searching = true;
         // todo
         while (searching) {
        ReceiveBluetoothMSG();
@@ -149,7 +149,7 @@ void loop()
         break;
 
       case level1CMD5: // Alblum
-        Serial.println("Alblum!");
+        Serial.println("Album!");
         level = 0;
         // todo
         myVR.clear();
