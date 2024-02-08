@@ -8,7 +8,7 @@ VR myVR(2,3);    // TX to pin 2; RX to pin 3; Bluetooth use the hardware TX and 
 Servo Rotate_Servo; // Pin 6
 Servo Left_Right_Servo; // Pin 7
 Servo Up_Down_Servo; // Pin 8
-const int Bluetooth_statePin = 9;
+const int Bluetooth_statePin = 9; // Check the bluetooth connection status
 
 
 // data storage
@@ -139,20 +139,20 @@ void loop()
         break;
       
       case level1CMD3: // Find
-        if(digitalRead(Bluetooth_statePin) == HIGH){ // 
+        if(digitalRead(Bluetooth_statePin) == HIGH){ // Check the bluetooth connect
           Serial.println("Find!"); // Cannot be deleted!
           searching = true;
         }else{
-          Serial.println("Function unavaiable. Please connect to the phone.");
+          Serial.println("Search Function unavaiable. Please connect to the phone.");
         }
         while (searching) {
           if(digitalRead(Bluetooth_statePin) == LOW){
-            Serial.println("Error! Please connect to the phone.");
+            Serial.println("Disconnected Error!");
             searching = false;
             break;
           }
        ReceiveBluetoothMSG();
-   }
+          }
         level = 0;
         myVR.clear();
         myVR.load(uint8_t (0));  // load the Alice
@@ -164,7 +164,6 @@ void loop()
         myVR.clear();
         rotate();
         myVR.load(uint8_t (0));  // load the Alice
-
         break;
 
       case level1CMD5: // Alblum
@@ -243,22 +242,11 @@ void loop()
   }
 }
 
-/**
-  @brief   Print signature, if the character is invisible, 
-           print hexible value instead.
-  @param   buf  -->  VR module return value when voice is recognized.
-             buf[0]  -->  Group mode(FF: None Group, 0x8n: User, 0x0n:System
-             buf[1]  -->  number of record which is recognized. 
-             buf[2]  -->  Recognizer index(position) value of the recognized record.
-             buf[3]  -->  Signature length
-             buf[4]~buf[n] --> Signature
-*/
 
 void continueMovingUp(int Speed){
   if(up_down_angle < 80){
   up_down_angle ++;
   Up_Down_Servo.write(up_down_angle);
-  //Serial.println(up_down_angle);
   delay(Speed);
   }else{
     level = 0;
@@ -272,7 +260,6 @@ void continueMovingDown(int Speed){
   if(up_down_angle > 4){
   up_down_angle --;
   Up_Down_Servo.write(up_down_angle);
-  //Serial.println(up_down_angle);
   delay(Speed);
   }else{
     level = 0;
@@ -286,7 +273,6 @@ void continueMovingLeft(int Speed){
   if(left_right_angle < 125){
   left_right_angle ++;
   Left_Right_Servo.write(left_right_angle);
-  //Serial.println(left_right_angle);
   delay(Speed);
   }else{
     level = 0;
@@ -300,7 +286,6 @@ void continueMovingRight(int Speed){
   if(left_right_angle > 0){
   left_right_angle --;
   Left_Right_Servo.write(left_right_angle);
-  //Serial.println(left_right_angle);
   delay(Speed);
   }else{
     level = 0;
@@ -378,7 +363,6 @@ void processContent(String data) {
     Coordinate coord = extractCoordinate(packet);
     if (coord.type == "X") {
       int x = coord.value.toInt();
-      //Serial.println(x);
       difference_X = x - centerX;
       if(abs(difference_X) < tracking_Sensitivity){
         moveLeft = false;
@@ -389,17 +373,13 @@ void processContent(String data) {
       if (difference_X < -tracking_Sensitivity) {
         moveRight = false;
         moveLeft = true;
-        //Serial.println("Left");
       }
 
       if (difference_X > tracking_Sensitivity) {
         moveLeft = false;
         moveRight = true;
-        //Serial.println("Right");
       }
       
-      //Serial.println(difference_X);
-      //Serial.println("X coordinate: " + coord.value);
     } else if (coord.type == "Y") {
       int y = coord.value.toInt();
       difference_Y = y - centerY;
@@ -418,8 +398,6 @@ void processContent(String data) {
         moveUp = true;
         Serial.println("Up");
       }
-      //Serial.println(difference_Y);
-      //Serial.println("Y coordinate: " + coord.value);
     }
   }
 }
