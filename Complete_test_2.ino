@@ -1,21 +1,28 @@
 #include <SoftwareSerial.h>
 #include "VoiceRecognitionV3.h"
 #include <Servo.h>
+#include <math.h>
 
-
+// object defination
 VR myVR(2,3);    // TX to pin 2; RX to pin 3; Bluetooth use the hardware TX and RX pins
 Servo Rotate_Servo; // Pin 6
 Servo Left_Right_Servo; // Pin 7
 Servo Up_Down_Servo; // Pin 8
+const int Bluetooth_statePin = 9;
 
+
+// data storage
 uint8_t record[6]; // save record
 uint8_t buf[64];
 String content = "";
 char datarcv;
-String centerX = "";
-String centerY = "";
+int centerX = 360;
+int centerY = 753;
+int difference_X = 0;
+int difference_Y = 0;
+int tracking_Sensitivity = 35;
 
-
+// Flags
 int level = 0;
 bool moveUp = false;
 bool moveDown = false;
@@ -23,6 +30,8 @@ bool moveLeft = false;
 bool moveRight = false;
 bool horizental = false;
 bool searching = false; // Test
+bool X_Central = false;
+bool Y_Central = false;
 
 // initial angle
 int up_down_angle = 44;
@@ -33,16 +42,19 @@ int rotate_angle = 90;
 int up_down_Speed = 30;
 int left_right_Speed = 30;
 int rotate_Speed = 20;
+int search_Speed = 100;
 
+// Macro definations
+//Level 0
 #define level0Alice      (0) 
-
+// Level 1
 #define level1CMD1       (2) // Take photo
 #define level1CMD2       (3) // Move
 #define level1CMD3       (4) // Find
 #define level1CMD4       (5) // Rotate
 #define level1CMD5       (10) // Alblum
 #define level1CMD6       (11) // Tap center
-
+// Level 2
 #define level2CMD1       (1) // Stop
 #define level2CMD2       (6) // Up
 #define level2CMD3       (7) // Down
@@ -60,6 +72,7 @@ void setup()
 {
   /** initialize */
   myVR.begin(9600);
+  pinMode(Bluetooth_statePin, INPUT);
   Serial.begin(9600);
   if(myVR.clear() == 0){
     Serial.println("System Ready!");
@@ -75,8 +88,6 @@ void setup()
   Rotate_Servo.write(rotate_angle);
   Left_Right_Servo.write(left_right_angle);
   Up_Down_Servo.write(up_down_angle);
-
-
 }
 
 void loop()
@@ -102,10 +113,13 @@ void loop()
         }
         break;
 
-      case level1CMD1: // Take photo
-        Serial.println("Take photo!");
+      case level1CMD1: // Take photo 
+        if(digitalRead(Bluetooth_statePin) == HIGH){ // Check the bluetooth connect
+          Serial.println("Take photo!"); // Cannot be deleted!
+        }else{
+          Serial.println("Take photo Function unavaiable. Please connect to the phone.");
+        }
         level = 0;
-        // todo
         myVR.clear();
         myVR.load(uint8_t (0));  // load the Alice
         break;
@@ -120,18 +134,23 @@ void loop()
           record[2] = level2CMD3;  // Down
           record[3] = level2CMD4;  // Left
           record[4] = level2CMD5;  // Right
-          if(myVR.load(record, 5) >= 0){
-            //printRecord(record, 5);
-            //Serial.println(F("loaded."));
-          }
+          myVR.load(record, 5);
         }
         break;
       
       case level1CMD3: // Find
-        Serial.println("Find!");
-        searching = true;
-        // todo
+        if(digitalRead(Bluetooth_statePin) == HIGH){ // 
+          Serial.println("Find!"); // Cannot be deleted!
+          searching = true;
+        }else{
+          Serial.println("Function unavaiable. Please connect to the phone.");
+        }
         while (searching) {
+          if(digitalRead(Bluetooth_statePin) == LOW){
+            Serial.println("Error! Please connect to the phone.");
+            searching = false;
+            break;
+          }
        ReceiveBluetoothMSG();
    }
         level = 0;
@@ -149,11 +168,14 @@ void loop()
         break;
 
       case level1CMD5: // Alblum
-        Serial.println("Album!");
+        if(digitalRead(Bluetooth_statePin) == HIGH){ // Check the bluetooth connection
+          Serial.println("Album!"); // Cannot be deleted!
+        }else{
+          Serial.println("Album Function unavaiable. Please connect to the phone.");
+        }
         level = 0;
-        // todo
         myVR.clear();
-        myVR.load(uint8_t (0));  // load the Alice
+        myVR.load(uint8_t (0)); // load the Alice
         break;
 
       case level1CMD6: // Tap center
@@ -181,26 +203,26 @@ void loop()
       case level2CMD2: // Move up
         Serial.println("up!");
         moveUp = true;
-        startMovingUp();
+        moveDown = false;
         break;
 
       case level2CMD3: // Move Down
         Serial.println("down!");
         moveDown = true;
-        startMovingDown();
+        moveUp = false;
         break;
 
       case level2CMD4: // Move left
         Serial.println("left!");
         moveLeft = true;
-        startMovingLeft();
+        moveRight = false;
         break;
       
 
       case level2CMD5: // Move right
         Serial.println("right!");
         moveRight = true;
-        startMovingRight();
+        moveLeft = false;
         break;
 
       default:
@@ -208,37 +230,16 @@ void loop()
     }
   }
   if(moveUp){
-      continueMovingUp();
+      continueMovingUp(up_down_Speed);
     }
   if(moveDown){
-    continueMovingDown();
+    continueMovingDown(up_down_Speed);
   }
   if(moveLeft){
-    continueMovingLeft();
+    continueMovingLeft(left_right_Speed);
   }
   if(moveRight){
-    continueMovingRight();
-  }
-}
-
-/**
-  @brief   Print signature, if the character is invisible, 
-           print hexible value instead.
-  @param   buf     --> command length
-           len     --> number of parameters
-*/
-void printSignature(uint8_t *buf, int len)
-{
-  int i;
-  for(i=0; i<len; i++){
-    if(buf[i]>0x19 && buf[i]<0x7F){
-      Serial.write(buf[i]);
-    }
-    else{
-      Serial.print("[");
-      Serial.print(buf[i], HEX);
-      Serial.print("]");
-    }
+    continueMovingRight(left_right_Speed);
   }
 }
 
@@ -253,63 +254,12 @@ void printSignature(uint8_t *buf, int len)
              buf[4]~buf[n] --> Signature
 */
 
-void startMovingUp(){
-  if(up_down_angle < 74){
-  up_down_angle ++;
-  Up_Down_Servo.write(up_down_angle);
-  delay(up_down_Speed);
-  }else{
-    level = 0;
-    moveUp = false;
-    myVR.clear();
-    myVR.load(uint8_t (0));  // load the Alice
-  }
-}
-void startMovingDown(){
-  if(up_down_angle > 4){
-  up_down_angle --;
-  Up_Down_Servo.write(up_down_angle);
-  delay(up_down_Speed);
-  }else{
-    level = 0;
-    moveDown = false;
-    myVR.clear();
-    myVR.load(uint8_t (0));  // load the Alice
-  }
-}
-
-void startMovingLeft(){
-  if(left_right_angle < 125){
-  left_right_angle ++;
-  Left_Right_Servo.write(left_right_angle);
-  delay(left_right_Speed);
-  }else{
-    level = 0;
-    moveLeft = false;
-    myVR.clear();
-    myVR.load(uint8_t (0));  // load the Alice
-  }
-}
-
-void startMovingRight(){
-  if(left_right_angle > 0){
-  left_right_angle --;
-  Left_Right_Servo.write(left_right_angle);
-  delay(left_right_Speed);
-  }else{
-    level = 0;
-    moveRight = false;
-    myVR.clear();
-    myVR.load(uint8_t (0));  // load the Alice
-  }
-}
-
-void continueMovingUp(){
+void continueMovingUp(int Speed){
   if(up_down_angle < 80){
   up_down_angle ++;
   Up_Down_Servo.write(up_down_angle);
   //Serial.println(up_down_angle);
-  delay(up_down_Speed);
+  delay(Speed);
   }else{
     level = 0;
     moveUp = false;
@@ -318,12 +268,12 @@ void continueMovingUp(){
   }
   
 }
-void continueMovingDown(){
+void continueMovingDown(int Speed){
   if(up_down_angle > 4){
   up_down_angle --;
   Up_Down_Servo.write(up_down_angle);
   //Serial.println(up_down_angle);
-  delay(up_down_Speed);
+  delay(Speed);
   }else{
     level = 0;
     moveDown = false;
@@ -332,12 +282,12 @@ void continueMovingDown(){
   }
 }
 
-void continueMovingLeft(){
+void continueMovingLeft(int Speed){
   if(left_right_angle < 125){
   left_right_angle ++;
   Left_Right_Servo.write(left_right_angle);
   //Serial.println(left_right_angle);
-  delay(left_right_Speed);
+  delay(Speed);
   }else{
     level = 0;
     moveLeft = false;
@@ -346,12 +296,12 @@ void continueMovingLeft(){
   }
 }
 
-void continueMovingRight(){
+void continueMovingRight(int Speed){
   if(left_right_angle > 0){
   left_right_angle --;
   Left_Right_Servo.write(left_right_angle);
   //Serial.println(left_right_angle);
-  delay(left_right_Speed);
+  delay(Speed);
   }else{
     level = 0;
     moveRight = false;
@@ -381,6 +331,24 @@ void rotate(){
 }
 
 void ReceiveBluetoothMSG(){ // Function for monitoring the bluetooth inputstream from the phone
+    if(moveLeft){
+      continueMovingLeft(search_Speed);
+      }
+    if(moveRight){
+      continueMovingRight(search_Speed);
+      }
+    if(moveUp){
+      continueMovingUp(search_Speed);
+    }
+    if(moveDown){
+      continueMovingDown(search_Speed);
+    }
+    if(X_Central && Y_Central){
+        searching = false;
+        X_Central = false;
+        Y_Central = false;
+        Serial.println("Search finish!"); // Cannot be deleted!
+    }
   if (Serial.available()) {
     while (Serial.available() > 0) {
       datarcv = Serial.read();
@@ -409,21 +377,61 @@ void processContent(String data) {
     // Process the extracted packet
     Coordinate coord = extractCoordinate(packet);
     if (coord.type == "X") {
-      Serial.println("X coordinate: " + coord.value);
+      int x = coord.value.toInt();
+      //Serial.println(x);
+      difference_X = x - centerX;
+      if(abs(difference_X) < tracking_Sensitivity){
+        moveLeft = false;
+        moveRight = false;
+        X_Central = true;
+      }
+
+      if (difference_X < -tracking_Sensitivity) {
+        moveRight = false;
+        moveLeft = true;
+        //Serial.println("Left");
+      }
+
+      if (difference_X > tracking_Sensitivity) {
+        moveLeft = false;
+        moveRight = true;
+        //Serial.println("Right");
+      }
+      
+      //Serial.println(difference_X);
+      //Serial.println("X coordinate: " + coord.value);
     } else if (coord.type == "Y") {
-      Serial.println("Y coordinate: " + coord.value);
+      int y = coord.value.toInt();
+      difference_Y = y - centerY;
+      if(abs(difference_Y) < tracking_Sensitivity){
+        moveUp = false;
+        moveDown = false;
+        Y_Central = true;
+      }
+      if(difference_Y > tracking_Sensitivity){
+        moveDown = true;
+        moveUp = false;
+        Serial.println("Down");
+      }
+      if(difference_Y < -tracking_Sensitivity){
+        moveDown = false;
+        moveUp = true;
+        Serial.println("Up");
+      }
+      //Serial.println(difference_Y);
+      //Serial.println("Y coordinate: " + coord.value);
     }
   }
 }
 
 
-Coordinate extractCoordinate(String data) { // Function for extract the right X/Y coordinate value from the data package received from Bluetooth
+Coordinate extractCoordinate(String data) { // Function for extract the right X/Y coordinate value from the "X/Y $XXX !" data package received from Bluetooth
   Coordinate coord;
   int dollarIndex = data.indexOf('$') + 1;
   int exclamationIndex = data.indexOf('!', dollarIndex);
 
   if (dollarIndex > 1 && exclamationIndex > dollarIndex) {
-    coord.type = data.substring(0, 1); // Extract the type: X or Y
+    coord.type = data.substring(0, 1); // Extract the coordinate type: X or Y
     coord.value = data.substring(dollarIndex, exclamationIndex); // Extract the coordinate value
   } else {
     coord.type = "Error";
