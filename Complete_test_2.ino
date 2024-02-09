@@ -332,6 +332,10 @@ void ReceiveBluetoothMSG(){ // Function for monitoring the bluetooth inputstream
         searching = false;
         X_Central = false;
         Y_Central = false;
+        moveUp = false;
+        moveDown = false;
+        moveLeft = false;
+        moveRight = false;
         Serial.println("Search finish!"); // Cannot be deleted!
     }
   if (Serial.available()) {
@@ -391,12 +395,10 @@ void processContent(String data) {
       if(difference_Y > tracking_Sensitivity){
         moveDown = true;
         moveUp = false;
-        Serial.println("Down");
       }
       if(difference_Y < -tracking_Sensitivity){
         moveDown = false;
         moveUp = true;
-        Serial.println("Up");
       }
     }
   }
