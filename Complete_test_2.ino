@@ -1,13 +1,21 @@
 #include <SoftwareSerial.h>
 #include "VoiceRecognitionV3.h"
-#include <Servo.h>
 #include <math.h>
+
+#include <Wire.h>
+#include <Adafruit_PWMServoDriver.h>
+
+Adafruit_PWMServoDriver Servos = Adafruit_PWMServoDriver(0x40);
+
+#define servoMIN 102
+#define servoMAX 512
+//Servo Pins
+#define Left_Right_Pin  (12) 
+#define Up_Down_Pin     (13) 
+#define Rotate_Pin      (14) 
 
 // object defination
 VR myVR(2,3);    // TX to pin 2; RX to pin 3; Bluetooth use the hardware TX and RX pins
-Servo Rotate_Servo; // Pin 6
-Servo Left_Right_Servo; // Pin 7
-Servo Up_Down_Servo; // Pin 8
 const int Bluetooth_statePin = 9; // Check the bluetooth connection status
 
 
@@ -21,6 +29,9 @@ int centerY = 753;
 int difference_X = 0;
 int difference_Y = 0;
 int tracking_Sensitivity = 35;
+int pulseLength_Leftright = 0;
+int pulseLength_Updown = 0;
+int pulseLength_Rotate = 0;
 
 // Flags
 int level = 0;
@@ -62,6 +73,7 @@ int search_Speed = 100;
 #define level2CMD5       (9) // Right
 
 
+
 struct Coordinate {
   String type;
   String value;
@@ -72,8 +84,17 @@ void setup()
 {
   /** initialize */
   myVR.begin(9600);
+  Servos.begin();
+  Servos.setPWMFreq(50);  // This is the maximum PWM frequency
   pinMode(Bluetooth_statePin, INPUT);
   Serial.begin(9600);
+  pulseLength_Leftright = map(left_right_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
+  Servos.setPWM(Left_Right_Pin, 0, pulseLength_Leftright);
+  pulseLength_Updown = map(up_down_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
+  Servos.setPWM(Up_Down_Pin, 0, pulseLength_Updown);
+  pulseLength_Rotate = map(rotate_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
+  Servos.setPWM(Rotate_Pin, 0, pulseLength_Rotate);
+
   if(myVR.clear() == 0){
     Serial.println("System Ready!");
   }else{
@@ -82,12 +103,6 @@ void setup()
   }
   myVR.load(uint8_t (0));  // load the Alice
   level = 0;
-  Rotate_Servo.attach(6);
-  Left_Right_Servo.attach(7);
-  Up_Down_Servo.attach(8);
-  Rotate_Servo.write(rotate_angle);
-  Left_Right_Servo.write(left_right_angle);
-  Up_Down_Servo.write(up_down_angle);
 }
 
 void loop()
@@ -180,9 +195,16 @@ void loop()
       case level1CMD6: // Tap center
         Serial.println("Tap center!");
         level = 0;
-        Rotate_Servo.write(90);
-        Left_Right_Servo.write(63);
-        Up_Down_Servo.write(34);
+        up_down_angle = 34;
+        left_right_angle = 63;
+        rotate_angle = 90;
+        pulseLength_Leftright = map(left_right_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
+        Servos.setPWM(Left_Right_Pin, 0, pulseLength_Leftright);
+        pulseLength_Updown = map(up_down_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
+        Servos.setPWM(Up_Down_Pin, 0, pulseLength_Updown);
+        pulseLength_Rotate = map(rotate_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
+        Servos.setPWM(Rotate_Pin, 0, pulseLength_Rotate);
+        
         horizental = false;
         myVR.clear();
         myVR.load(uint8_t (0));  // load the Alice
@@ -246,7 +268,8 @@ void loop()
 void continueMovingUp(int Speed){
   if(up_down_angle < 80){
   up_down_angle ++;
-  Up_Down_Servo.write(up_down_angle);
+  pulseLength_Updown = map(up_down_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
+  Servos.setPWM(Up_Down_Pin, 0, pulseLength_Updown);
   delay(Speed);
   }else{
     level = 0;
@@ -259,7 +282,8 @@ void continueMovingUp(int Speed){
 void continueMovingDown(int Speed){
   if(up_down_angle > 4){
   up_down_angle --;
-  Up_Down_Servo.write(up_down_angle);
+  pulseLength_Updown = map(up_down_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
+  Servos.setPWM(Up_Down_Pin, 0, pulseLength_Updown);
   delay(Speed);
   }else{
     level = 0;
@@ -272,7 +296,8 @@ void continueMovingDown(int Speed){
 void continueMovingLeft(int Speed){
   if(left_right_angle < 125){
   left_right_angle ++;
-  Left_Right_Servo.write(left_right_angle);
+  pulseLength_Leftright = map(left_right_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
+    Servos.setPWM(Left_Right_Pin, 0, pulseLength_Leftright);
   delay(Speed);
   }else{
     level = 0;
@@ -285,7 +310,8 @@ void continueMovingLeft(int Speed){
 void continueMovingRight(int Speed){
   if(left_right_angle > 0){
   left_right_angle --;
-  Left_Right_Servo.write(left_right_angle);
+  pulseLength_Leftright = map(left_right_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
+  Servos.setPWM(Left_Right_Pin, 0, pulseLength_Leftright);
   delay(Speed);
   }else{
     level = 0;
@@ -299,7 +325,8 @@ void rotate(){
   if(!horizental){
           rotate_angle = 90;
           while(rotate_angle > 0){
-          Rotate_Servo.write(rotate_angle);
+          pulseLength_Rotate = map(rotate_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
+          Servos.setPWM(Rotate_Pin, 0, pulseLength_Rotate);
           rotate_angle--;
           delay(rotate_Speed);
         }
@@ -307,7 +334,8 @@ void rotate(){
         }else{
           rotate_angle = 0;
           while(rotate_angle < 90){
-          Rotate_Servo.write(rotate_angle);
+          pulseLength_Rotate = map(rotate_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
+          Servos.setPWM(Rotate_Pin, 0, pulseLength_Rotate);
           rotate_angle++;
           delay(rotate_Speed);
         }
