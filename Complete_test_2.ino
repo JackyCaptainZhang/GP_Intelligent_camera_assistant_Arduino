@@ -9,7 +9,7 @@ Adafruit_PWMServoDriver Servos = Adafruit_PWMServoDriver(0x40);
 
 #define servoMIN 102
 #define servoMAX 512
-//Servo Pins
+//Servo Pins (Pins of the PWM chip)
 #define Left_Right_Pin  (12) 
 #define Up_Down_Pin     (13) 
 #define Rotate_Pin      (14) 
@@ -380,10 +380,12 @@ void ReceiveBluetoothMSG(){ // Function for monitoring the bluetooth inputstream
 }
 
 void processContent(String data) { 
-// This function is used to process a string containing multiple coordinate packets.
-// It splits the string into separate packets and processes each packet. 
-// The loop exits when no more newline characters are found,
-// indicating that all packets in the string have been processed
+/* This function is used to process a string containing multiple coordinate packets.
+   It splits the string into separate packets and processes each packet. 
+   The loop exits when no more newline characters are found,
+   indicating that all packets in the string have been processed.
+   Also, the tracking function is also in this block.
+ */
   int lastIndex = 0;
   int nextIndex;
 
@@ -395,36 +397,36 @@ void processContent(String data) {
     Coordinate coord = extractCoordinate(packet);
     if (coord.type == "X") {
       int x = coord.value.toInt();
-      difference_X = x - centerX;
-      if(abs(difference_X) < tracking_Sensitivity){
+      difference_X = x - centerX; // Calclate the difference of X
+      if(abs(difference_X) < tracking_Sensitivity){ // Stop moving when smaller than a threshold
         moveLeft = false;
         moveRight = false;
         X_Central = true;
       }
 
-      if (difference_X < -tracking_Sensitivity) {
+      if (difference_X < -tracking_Sensitivity) { // Move left when whenobject is on the left
         moveRight = false;
         moveLeft = true;
       }
 
-      if (difference_X > tracking_Sensitivity) {
+      if (difference_X > tracking_Sensitivity) { // Move right when whenobject is on the right
         moveLeft = false;
         moveRight = true;
       }
       
     } else if (coord.type == "Y") {
       int y = coord.value.toInt();
-      difference_Y = y - centerY;
-      if(abs(difference_Y) < tracking_Sensitivity){
+      difference_Y = y - centerY; // Calclate the difference of Y
+      if(abs(difference_Y) < tracking_Sensitivity){ // Stop moving when smaller than a threshold
         moveUp = false;
         moveDown = false;
         Y_Central = true;
       }
-      if(difference_Y > tracking_Sensitivity){
+      if(difference_Y > tracking_Sensitivity){ // Move down when whenobject is below
         moveDown = true;
         moveUp = false;
       }
-      if(difference_Y < -tracking_Sensitivity){
+      if(difference_Y < -tracking_Sensitivity){ // Move up when whenobject is above
         moveDown = false;
         moveUp = true;
       }
