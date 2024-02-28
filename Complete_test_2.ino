@@ -1,7 +1,6 @@
 #include <SoftwareSerial.h>
 #include "VoiceRecognitionV3.h"
 #include <math.h>
-
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 
@@ -9,14 +8,18 @@ Adafruit_PWMServoDriver Servos = Adafruit_PWMServoDriver(0x40);
 
 #define servoMIN 102
 #define servoMAX 512
+//Pins definations
 //Servo Pins (Pins of the PWM chip)
 #define Left_Right_Pin  (12) 
 #define Up_Down_Pin     (13) 
 #define Rotate_Pin      (14) 
+// Check the bluetooth connection status
+#define Bluetooth_statePin  (9) 
+#define LED_Pin         (10) 
+
 
 // object defination
 VR myVR(2,3);    // TX to pin 2; RX to pin 3; Bluetooth use the hardware TX and RX pins
-const int Bluetooth_statePin = 9; // Check the bluetooth connection status
 
 
 // data storage
@@ -54,6 +57,7 @@ int up_down_Speed = 30;
 int left_right_Speed = 30;
 int rotate_Speed = 20;
 int search_Speed = 100;
+int flash_Speed = 150;
 
 // Macro definations
 //Level 0
@@ -87,6 +91,7 @@ void setup()
   Servos.begin();
   Servos.setPWMFreq(50);  // This is the maximum PWM frequency
   pinMode(Bluetooth_statePin, INPUT);
+  pinMode(LED_Pin, OUTPUT);
   Serial.begin(9600);
   pulseLength_Leftright = map(left_right_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
   Servos.setPWM(Left_Right_Pin, 0, pulseLength_Leftright);
@@ -113,6 +118,7 @@ void loop()
     switch(buf[1]){
 
       case level0Alice: // hello Alice
+        LED_Flash(flash_Speed);
         if(level == 0){
           level = 1;
           myVR.clear();
@@ -128,7 +134,8 @@ void loop()
         }
         break;
 
-      case level1CMD1: // Take photo 
+      case level1CMD1: // Take photo
+        LED_Flash(flash_Speed); 
         if(digitalRead(Bluetooth_statePin) == HIGH){ // Check the bluetooth connect
           Serial.println("Take photo!"); // Cannot be deleted!
         }else{
@@ -140,6 +147,7 @@ void loop()
         break;
       
       case level1CMD2: // Move
+        LED_Flash(flash_Speed);
         Serial.print("Move: ");
         if (level == 1) {
           level = 2;
@@ -154,6 +162,7 @@ void loop()
         break;
       
       case level1CMD3: // Find
+        LED_Flash(flash_Speed);
         if(digitalRead(Bluetooth_statePin) == HIGH){ // Check the bluetooth connect
           Serial.println("Find!"); // Cannot be deleted!
           searching = true;
@@ -174,6 +183,7 @@ void loop()
         break;
       
       case level1CMD4: // Rotate
+        LED_Flash(flash_Speed);
         Serial.println("Rotate!");
         level = 0;
         myVR.clear();
@@ -182,6 +192,7 @@ void loop()
         break;
 
       case level1CMD5: // Alblum
+        LED_Flash(flash_Speed);
         if(digitalRead(Bluetooth_statePin) == HIGH){ // Check the bluetooth connection
           Serial.println("Album!"); // Cannot be deleted!
         }else{
@@ -193,6 +204,7 @@ void loop()
         break;
 
       case level1CMD6: // Tap center
+        LED_Flash(flash_Speed);
         Serial.println("Tap center!");
         level = 0;
         up_down_angle = 34;
@@ -211,6 +223,7 @@ void loop()
         break;
 
       case level2CMD1: // Stop
+        LED_Flash(flash_Speed);
         Serial.println("Stop!");
         moveDown = false;
         moveUp = false;
@@ -222,18 +235,21 @@ void loop()
         break;
 
       case level2CMD2: // Move up
+        LED_Flash(flash_Speed);
         Serial.println("up!");
         moveUp = true;
         moveDown = false;
         break;
 
       case level2CMD3: // Move Down
+        LED_Flash(flash_Speed);
         Serial.println("down!");
         moveDown = true;
         moveUp = false;
         break;
 
       case level2CMD4: // Move left
+        LED_Flash(flash_Speed);
         Serial.println("left!");
         moveLeft = true;
         moveRight = false;
@@ -241,6 +257,7 @@ void loop()
       
 
       case level2CMD5: // Move right
+        LED_Flash(flash_Speed);
         Serial.println("right!");
         moveRight = true;
         moveLeft = false;
@@ -449,3 +466,13 @@ Coordinate extractCoordinate(String data) { // Function for extract the right X/
   }
   return coord;
 }
+
+void LED_Flash(int flashSpeed){
+  digitalWrite(LED_Pin, HIGH);
+  delay(flashSpeed);
+  digitalWrite(LED_Pin, LOW);
+  delay(flashSpeed);
+}
+
+
+
