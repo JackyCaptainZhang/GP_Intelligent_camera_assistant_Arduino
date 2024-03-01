@@ -16,6 +16,8 @@ Adafruit_PWMServoDriver Servos = Adafruit_PWMServoDriver(0x40);
 // Check the bluetooth connection status
 #define Bluetooth_statePin  (9) 
 #define LED_Pin         (10) 
+#define RST_Pin         (11) 
+void(* resetFunc) (void) = 0; // For reset functions. Just call resetFunc();
 
 
 // object defination
@@ -48,9 +50,14 @@ bool X_Central = false;
 bool Y_Central = false;
 
 // initial angle
-int up_down_angle = 44;
-int left_right_angle = 63;
+int up_down_angle = 120;
+int left_right_angle = 140;
 int rotate_angle = 90;
+int left_most_Angle = 180;
+int right_most_Angle = 100;
+int up_most_Angle = 150;
+int down_most_Angle = 80;
+
 
 // speed control: the larger the slower
 int up_down_Speed = 30;
@@ -92,6 +99,7 @@ void setup()
   Servos.setPWMFreq(50);  // This is the maximum PWM frequency
   pinMode(Bluetooth_statePin, INPUT);
   pinMode(LED_Pin, OUTPUT);
+  pinMode(RST_Pin, INPUT_PULLUP);
   Serial.begin(9600);
   pulseLength_Leftright = map(left_right_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
   Servos.setPWM(Left_Right_Pin, 0, pulseLength_Leftright);
@@ -112,6 +120,10 @@ void setup()
 
 void loop()
 { 
+  if(digitalRead(RST_Pin) == LOW){
+    delay(1100);
+    resetFunc();
+  }
   int ret;
   ret = myVR.recognize(buf, 50);
   if(ret>0){
@@ -207,8 +219,8 @@ void loop()
         LED_Flash(flash_Speed);
         Serial.println("Tap center!");
         level = 0;
-        up_down_angle = 34;
-        left_right_angle = 63;
+        up_down_angle = 120;
+        left_right_angle = 140;
         rotate_angle = 90;
         pulseLength_Leftright = map(left_right_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
         Servos.setPWM(Left_Right_Pin, 0, pulseLength_Leftright);
@@ -283,7 +295,7 @@ void loop()
 
 
 void continueMovingUp(int Speed){
-  if(up_down_angle < 80){
+  if(up_down_angle < up_most_Angle){
   up_down_angle ++;
   pulseLength_Updown = map(up_down_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
   Servos.setPWM(Up_Down_Pin, 0, pulseLength_Updown);
@@ -297,7 +309,7 @@ void continueMovingUp(int Speed){
   
 }
 void continueMovingDown(int Speed){
-  if(up_down_angle > 4){
+  if(up_down_angle > down_most_Angle){
   up_down_angle --;
   pulseLength_Updown = map(up_down_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
   Servos.setPWM(Up_Down_Pin, 0, pulseLength_Updown);
@@ -311,7 +323,7 @@ void continueMovingDown(int Speed){
 }
 
 void continueMovingLeft(int Speed){
-  if(left_right_angle < 125){
+  if(left_right_angle < left_most_Angle){
   left_right_angle ++;
   pulseLength_Leftright = map(left_right_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
     Servos.setPWM(Left_Right_Pin, 0, pulseLength_Leftright);
@@ -325,7 +337,7 @@ void continueMovingLeft(int Speed){
 }
 
 void continueMovingRight(int Speed){
-  if(left_right_angle > 0){
+  if(left_right_angle > right_most_Angle){
   left_right_angle --;
   pulseLength_Leftright = map(left_right_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
   Servos.setPWM(Left_Right_Pin, 0, pulseLength_Leftright);
