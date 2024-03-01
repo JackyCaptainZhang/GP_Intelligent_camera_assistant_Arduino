@@ -112,18 +112,18 @@ void setup()
     Serial.println("System Ready!");
   }else{
     Serial.println("Not find VoiceRecognitionModule.");
-    while(1);
+    //while(1);
   }
   myVR.load(uint8_t (0));  // load the Alice
   level = 0;
+  LED_Flash(flash_Speed); 
+  LED_Flash(flash_Speed); 
+  LED_Flash(flash_Speed); 
 }
 
 void loop()
 { 
-  if(digitalRead(RST_Pin) == LOW){
-    delay(1100);
-    resetFunc();
-  }
+  checkRST();
   int ret;
   ret = myVR.recognize(buf, 50);
   if(ret>0){
@@ -182,6 +182,7 @@ void loop()
           Serial.println("Search Function unavaiable. Please connect to the phone.");
         }
         while (searching) {
+          checkRST();
           if(digitalRead(Bluetooth_statePin) == LOW){
             Serial.println("Disconnected Error!");
             searching = false;
@@ -484,6 +485,13 @@ void LED_Flash(int flashSpeed){
   delay(flashSpeed);
   digitalWrite(LED_Pin, LOW);
   delay(flashSpeed);
+}
+
+void checkRST(){
+  if(digitalRead(RST_Pin) == LOW){
+    delay(1100);
+    resetFunc();
+  }
 }
 
 
