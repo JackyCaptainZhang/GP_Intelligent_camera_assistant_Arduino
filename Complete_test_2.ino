@@ -302,10 +302,7 @@ void continueMovingUp(int Speed){
   Servos.setPWM(Up_Down_Pin, 0, pulseLength_Updown);
   delay(Speed);
   }else{
-    level = 0;
     moveUp = false;
-    myVR.clear();
-    myVR.load(uint8_t (0));  // load the Alice
   }
   
 }
@@ -316,10 +313,7 @@ void continueMovingDown(int Speed){
   Servos.setPWM(Up_Down_Pin, 0, pulseLength_Updown);
   delay(Speed);
   }else{
-    level = 0;
     moveDown = false;
-    myVR.clear();
-    myVR.load(uint8_t (0));  // load the Alice
   }
 }
 
@@ -330,10 +324,7 @@ void continueMovingLeft(int Speed){
     Servos.setPWM(Left_Right_Pin, 0, pulseLength_Leftright);
   delay(Speed);
   }else{
-    level = 0;
     moveLeft = false;
-    myVR.clear();
-    myVR.load(uint8_t (0));  // load the Alice
   }
 }
 
@@ -344,10 +335,7 @@ void continueMovingRight(int Speed){
   Servos.setPWM(Left_Right_Pin, 0, pulseLength_Leftright);
   delay(Speed);
   }else{
-    level = 0;
     moveRight = false;
-    myVR.clear();
-    myVR.load(uint8_t (0));  // load the Alice
   }
 }
 
