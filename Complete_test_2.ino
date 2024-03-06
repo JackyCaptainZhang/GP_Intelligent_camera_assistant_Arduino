@@ -50,7 +50,7 @@ bool X_Central = false;
 bool Y_Central = false;
 
 // initial angle
-int up_down_angle = 120;
+int up_down_angle = 105;
 int left_right_angle = 140;
 int rotate_angle = 90;
 int left_most_Angle = 180;
@@ -82,6 +82,7 @@ int flash_Speed = 150;
 #define level2CMD3       (7) // Down
 #define level2CMD4       (8) // Left
 #define level2CMD5       (9) // Right
+#define level2CMD6       (12) // Pause
 
 
 
@@ -169,7 +170,8 @@ void loop()
           record[2] = level2CMD3;  // Down
           record[3] = level2CMD4;  // Left
           record[4] = level2CMD5;  // Right
-          myVR.load(record, 5);
+          record[5] = level2CMD6;  // Pause
+          myVR.load(record, 6);
         }
         break;
       
@@ -220,7 +222,7 @@ void loop()
         LED_Flash(flash_Speed);
         Serial.println("Tap center!");
         level = 0;
-        up_down_angle = 120;
+        up_down_angle = 105;
         left_right_angle = 140;
         rotate_angle = 90;
         pulseLength_Leftright = map(left_right_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
@@ -245,6 +247,15 @@ void loop()
         level = 0;
         myVR.clear();
         myVR.load(uint8_t (0));  // load the Alice
+        break;
+
+      case level2CMD6: // Pause
+        LED_Flash(flash_Speed);
+        Serial.println("Pause!");
+        moveDown = false;
+        moveUp = false;
+        moveLeft = false;
+        moveRight = false;
         break;
 
       case level2CMD2: // Move up
