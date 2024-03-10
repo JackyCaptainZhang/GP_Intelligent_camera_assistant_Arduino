@@ -52,11 +52,11 @@ bool Y_Central = false;
 // initial angle
 int up_down_angle = 105;
 int left_right_angle = 140;
-int rotate_angle = 90;
+int rotate_angle = 173;
 int left_most_Angle = 180;
 int right_most_Angle = 100;
-int up_most_Angle = 150;
-int down_most_Angle = 80;
+int up_most_Angle = 135;
+int down_most_Angle = 65;
 
 
 // speed control: the larger the slower
@@ -142,7 +142,7 @@ void loop()
           record[4] = level1CMD5;  // Alblum
           record[5] = level1CMD6;  // Tap center
           if(myVR.load(record, 6) >= 0){
-            Serial.println("Alice");
+            //Serial.println("Alice");
           }
         }
         break;
@@ -161,7 +161,7 @@ void loop()
       
       case level1CMD2: // Move
         LED_Flash(flash_Speed);
-        Serial.print("Move: ");
+        //Serial.print("Move: ");
         if (level == 1) {
           level = 2;
           myVR.clear();
@@ -199,7 +199,7 @@ void loop()
       
       case level1CMD4: // Rotate
         LED_Flash(flash_Speed);
-        Serial.println("Rotate!");
+        //Serial.println("Rotate!");
         level = 0;
         myVR.clear();
         rotate();
@@ -220,11 +220,11 @@ void loop()
 
       case level1CMD6: // Tap center
         LED_Flash(flash_Speed);
-        Serial.println("Tap center!");
+        //Serial.println("Tap center!");
         level = 0;
         up_down_angle = 105;
         left_right_angle = 140;
-        rotate_angle = 90;
+        rotate_angle = 173;
         pulseLength_Leftright = map(left_right_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
         Servos.setPWM(Left_Right_Pin, 0, pulseLength_Leftright);
         pulseLength_Updown = map(up_down_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
@@ -239,7 +239,7 @@ void loop()
 
       case level2CMD1: // Stop
         LED_Flash(flash_Speed);
-        Serial.println("Stop!");
+        //Serial.println("Stop!");
         moveDown = false;
         moveUp = false;
         moveLeft = false;
@@ -251,7 +251,7 @@ void loop()
 
       case level2CMD6: // Pause
         LED_Flash(flash_Speed);
-        Serial.println("Pause!");
+        //Serial.println("Pause!");
         moveDown = false;
         moveUp = false;
         moveLeft = false;
@@ -260,21 +260,21 @@ void loop()
 
       case level2CMD2: // Move up
         LED_Flash(flash_Speed);
-        Serial.println("up!");
+        //Serial.println("up!");
         moveUp = true;
         moveDown = false;
         break;
 
       case level2CMD3: // Move Down
         LED_Flash(flash_Speed);
-        Serial.println("down!");
+        //Serial.println("down!");
         moveDown = true;
         moveUp = false;
         break;
 
       case level2CMD4: // Move left
         LED_Flash(flash_Speed);
-        Serial.println("left!");
+        //Serial.println("left!");
         moveLeft = true;
         moveRight = false;
         break;
@@ -282,7 +282,7 @@ void loop()
 
       case level2CMD5: // Move right
         LED_Flash(flash_Speed);
-        Serial.println("right!");
+        // Serial.println("right!");
         moveRight = true;
         moveLeft = false;
         break;
@@ -352,8 +352,8 @@ void continueMovingRight(int Speed){
 
 void rotate(){
   if(!horizental){
-          rotate_angle = 90;
-          while(rotate_angle > 0){
+          rotate_angle = 173;
+          while(rotate_angle > 88){
           pulseLength_Rotate = map(rotate_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
           Servos.setPWM(Rotate_Pin, 0, pulseLength_Rotate);
           rotate_angle--;
@@ -361,8 +361,8 @@ void rotate(){
         }
         horizental = true;
         }else{
-          rotate_angle = 0;
-          while(rotate_angle < 90){
+          rotate_angle = 88;
+          while(rotate_angle < 173){
           pulseLength_Rotate = map(rotate_angle, 0, 180, servoMIN, servoMAX); // Map the angle to the according pulse length
           Servos.setPWM(Rotate_Pin, 0, pulseLength_Rotate);
           rotate_angle++;
