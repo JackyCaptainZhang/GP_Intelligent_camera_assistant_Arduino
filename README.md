@@ -25,22 +25,23 @@ PS: [] denotes the trained index for each command. Can be changed to personalise
 
 ### Level 1 CMD (6)
 
-* Take photo [2]: call the phone function
+* Capture [2]: call the phone function
 * Move [3]
 * Find [4]: call the phone function
 * Rotate [5]
-* Alblum [10]: call the phone function
-* Tap center [11]
+* Gallery [10]: call the phone function
+* Center [11]
 * () 
 
 ### Level 2 CMD
 
 * When Move (5)
-  * Up [6]
-  * Down [7]
+  * Sky [6]
+  * Ground [7]
   * Left [8]
   * Right [9]
   * Stop [1]
+  * Pause [12]
 
 
 
