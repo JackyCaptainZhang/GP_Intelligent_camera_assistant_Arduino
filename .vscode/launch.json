@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "/Users/jackyzhang/Desktop/Code_Projects/Arduino/GP_Intelligent_camera_assistant/Complete_test_2",
+      "program": "/Users/jackyzhang/Desktop/Code_Projects/Arduino/GP_Intelligent_camera_assistant/Complete_test_2/build/Debug/outDebug"
+    }
+  ]
+}

@@ -46,8 +46,10 @@ bool moveLeft = false;
 bool moveRight = false;
 bool horizental = false;
 bool searching = false; // Test
+bool searching_Moving = false;
 bool X_Central = false;
 bool Y_Central = false;
+
 
 // initial angle
 int up_down_angle = 105;
@@ -142,7 +144,6 @@ void loop()
           record[4] = level1CMD5;  // Alblum
           record[5] = level1CMD6;  // Tap center
           if(myVR.load(record, 6) >= 0){
-            //Serial.println("Alice");
           }
         }
         break;
@@ -161,7 +162,6 @@ void loop()
       
       case level1CMD2: // Move
         LED_Flash(flash_Speed);
-        //Serial.print("Move: ");
         if (level == 1) {
           level = 2;
           myVR.clear();
@@ -188,6 +188,7 @@ void loop()
           if(digitalRead(Bluetooth_statePin) == LOW){
             Serial.println("Disconnected Error!");
             searching = false;
+            searching_Moving = false;
             break;
           }
        ReceiveBluetoothMSG();
@@ -199,7 +200,6 @@ void loop()
       
       case level1CMD4: // Rotate
         LED_Flash(flash_Speed);
-        //Serial.println("Rotate!");
         level = 0;
         myVR.clear();
         rotate();
@@ -220,7 +220,6 @@ void loop()
 
       case level1CMD6: // Tap center
         LED_Flash(flash_Speed);
-        //Serial.println("Tap center!");
         level = 0;
         up_down_angle = 105;
         left_right_angle = 140;
@@ -239,7 +238,6 @@ void loop()
 
       case level2CMD1: // Stop
         LED_Flash(flash_Speed);
-        //Serial.println("Stop!");
         moveDown = false;
         moveUp = false;
         moveLeft = false;
@@ -251,7 +249,6 @@ void loop()
 
       case level2CMD6: // Pause
         LED_Flash(flash_Speed);
-        //Serial.println("Pause!");
         moveDown = false;
         moveUp = false;
         moveLeft = false;
@@ -260,21 +257,18 @@ void loop()
 
       case level2CMD2: // Move up
         LED_Flash(flash_Speed);
-        //Serial.println("up!");
         moveUp = true;
         moveDown = false;
         break;
 
       case level2CMD3: // Move Down
         LED_Flash(flash_Speed);
-        //Serial.println("down!");
         moveDown = true;
         moveUp = false;
         break;
 
       case level2CMD4: // Move left
         LED_Flash(flash_Speed);
-        //Serial.println("left!");
         moveLeft = true;
         moveRight = false;
         break;
@@ -282,7 +276,6 @@ void loop()
 
       case level2CMD5: // Move right
         LED_Flash(flash_Speed);
-        // Serial.println("right!");
         moveRight = true;
         moveLeft = false;
         break;
@@ -373,20 +366,24 @@ void rotate(){
 }
 
 void ReceiveBluetoothMSG(){ // Function for monitoring the bluetooth inputstream from the phone
-    if(moveLeft){
-      continueMovingLeft(search_Speed);
+      if(searching_Moving){
+        if(moveLeft){
+          continueMovingLeft(search_Speed);
+          }
+        if(moveRight){
+          continueMovingRight(search_Speed);
+          }
+        if(moveUp){
+          continueMovingUp(search_Speed);
+          }
+        if(moveDown){
+          continueMovingDown(search_Speed);
+          }
       }
-    if(moveRight){
-      continueMovingRight(search_Speed);
-      }
-    if(moveUp){
-      continueMovingUp(search_Speed);
-    }
-    if(moveDown){
-      continueMovingDown(search_Speed);
-    }
+    
     if(X_Central && Y_Central){
         searching = false;
+        searching_Moving = false;
         X_Central = false;
         Y_Central = false;
         moveUp = false;
@@ -400,6 +397,11 @@ void ReceiveBluetoothMSG(){ // Function for monitoring the bluetooth inputstream
       datarcv = Serial.read();
       content.concat(datarcv);
       delay(10);  
+    }
+    
+    if(content.indexOf("Finding") >= 0){ // Check the message from the phone to determain if search is ready
+      Serial.println(content);
+      searching_Moving = true;
     }
     if (datarcv == '\n') {
       processContent(content);
@@ -424,7 +426,8 @@ void processContent(String data) {
     lastIndex = nextIndex + 1;
     // Process the extracted packet
     Coordinate coord = extractCoordinate(packet);
-    if (coord.type == "X") {
+    if(searching_Moving){
+      if (coord.type == "X") {
       int x = coord.value.toInt();
       difference_X = x - centerX; // Calclate the difference of X
       if(abs(difference_X) < tracking_Sensitivity){ // Stop moving when smaller than a threshold
@@ -459,6 +462,7 @@ void processContent(String data) {
         moveDown = false;
         moveUp = true;
       }
+    }
     }
   }
 }
